@@ -1,11 +1,13 @@
-import * as trpc from "@trpc/server";
-import * as trpcNext from "@trpc/server/adapters/next";
-import { z } from "zod";
-import { prisma } from "../../../db/client";
+import * as trpc from '@trpc/server'
+import * as trpcNext from '@trpc/server/adapters/next'
+import { getProviders } from 'next-auth/react'
+import { resolve } from 'path'
+import { z } from 'zod'
+import { prisma } from '../../../db/client'
 
 export const appRouter = trpc
   .router()
-  .query("slugCheck", {
+  .query('slugCheck', {
     input: z.object({
       slug: z.string(),
     }),
@@ -14,11 +16,17 @@ export const appRouter = trpc
         where: {
           slug: input.slug,
         },
-      });
-      return { used: count > 0 };
+      })
+      return { used: count > 0 }
     },
   })
-  .mutation("createSlug", {
+  .query('providers', {
+    async resolve() {
+      const providers = await getProviders()
+      return providers
+    },
+  })
+  .mutation('createSlug', {
     input: z.object({
       slug: z.string(),
       url: z.string(),
@@ -30,16 +38,16 @@ export const appRouter = trpc
             slug: input.slug,
             url: input.url,
           },
-        });
+        })
       } catch (e) {
-        console.log(e);
+        console.log(e)
       }
     },
-  });
+  })
 
-export type AppRouter = typeof appRouter;
+export type AppRouter = typeof appRouter
 
 export default trpcNext.createNextApiHandler({
   router: appRouter,
   createContext: () => null,
-});
+})
